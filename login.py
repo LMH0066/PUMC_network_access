@@ -1,5 +1,6 @@
-import os
 import argparse
+import os
+import socket
 import time
 
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
@@ -8,16 +9,27 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 
 
+def check_network_connection():
+    try:
+        socket.create_connection(("www.baidu.com", 443), timeout=3)
+        return True
+    except OSError:
+        print("目前网络处于离线状态")
+        return False
+
+
 def run(url, username, password, need_keep, tolerance):
     _tolerance = 0
-    os.environ['SE_DRIVER_MIRROR_URL'] = 'https://mirrors.huaweicloud.com/geckodriver/'
+    if check_network_connection():
+        os.environ['SE_DRIVER_MIRROR_URL'] = 'https://mirrors.huaweicloud.com/geckodriver/'
+    else:
+        os.environ['SE_OFFLINE'] = 'true'
     while _tolerance < tolerance:
         try:
             options = FirefoxOptions()
             options.add_argument("--headless")
             options.add_argument("--disable-gpu")
             driver = webdriver.Firefox(options=options)
-            # os.environ['SE_OFFLINE'] = 'true'
             print('start')
             while True:
                 driver.get(url)
