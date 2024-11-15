@@ -6,7 +6,7 @@ import time
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import ElementNotInteractableException, WebDriverException
 
 
 def check_network_connection():
@@ -32,25 +32,28 @@ def run(url, username, password, need_keep, tolerance):
             driver = webdriver.Firefox(options=options)
             print('start')
             while True:
+                if check_network_connection():
+                    time.sleep(1)
+                    _tolerance = 0
+                    if not need_keep:
+                        _tolerance = tolerance
+                        break
+                    continue
                 driver.get(url)
                 time.sleep(10)  # 需要完整加载
-                name = driver.find_element(By.ID, "username")
+                driver.find_element(By.ID, "username").send_keys(username)
+                driver.find_element(By.ID, "password").send_keys(password)
+                driver.find_element(By.ID, "login-account").click()
                 _tolerance = 0
-                if name.text:
-                    time.sleep(1)
-                    continue
-                name.send_keys(username)
-                pwd =  driver.find_element(By.ID, "password")
-                pwd.send_keys(password)
-
-                login =  driver.find_element(By.ID, "login-account")
-                login.click()
                 time.sleep(1)
                 print('ok')
 
                 if not need_keep:
                     _tolerance = tolerance
                     break
+        except ElementNotInteractableException as e:
+            _tolerance = 0
+            time.sleep(2)
         except WebDriverException as e:
             _tolerance += 1
             print("An error occurred:", e)
