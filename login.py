@@ -19,6 +19,7 @@ def check_network_connection():
 
 
 def run(url, username, password, need_keep, tolerance):
+    tolerance = float('inf') if tolerance == -1 else tolerance
     _tolerance = 0
     if check_network_connection():
         os.environ['SE_DRIVER_MIRROR_URL'] = 'https://mirrors.huaweicloud.com/geckodriver/'
@@ -69,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument('--username', type=str)
     parser.add_argument('--password', type=str)
     parser.add_argument('--need_keep', type=bool, default=False)
-    parser.add_argument('--tolerance', type=int, default=3)
+    parser.add_argument('--tolerance', type=int, default=-1)
 
     args = parser.parse_args()
 
