@@ -66,7 +66,7 @@ def run(url, username, password, need_keep, tolerance):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--url', type=str, default='https://124.17.100.50/')
+    parser.add_argument('--url', type=str, default='http://124.17.100.50/')
     parser.add_argument('--username', type=str)
     parser.add_argument('--password', type=str)
     parser.add_argument('--need_keep', type=bool, default=False)
