@@ -7,11 +7,12 @@
 代码在python 3.8上测试过，理论上更高版本也能用。
 推荐使用anaconda做版本的隔离。
 ```bash
+sudo apt install chromium-driver
 pip install selenium
 ```
 ## run
 ```bash
 # 第一次执行需要联网，脚本会自动下载驱动
 # 如果需要监听掉线并及时联网的话，需要结合tmux开后台来使用，否则关掉窗口以后python进程就断了
-python login.py --username XXX --password XXX --need_keep <True or False>
+python login.py --username XXX --password XXX --need_keep <True or False> --tolerance -1
 ```
