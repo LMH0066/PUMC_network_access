@@ -1,12 +1,12 @@
 import argparse
-import os
 import socket
 import time
 
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import ElementNotInteractableException, WebDriverException
 
 
 def check_network_connection():
@@ -19,19 +19,22 @@ def check_network_connection():
 
 
 def run(url, username, password, need_keep, tolerance):
-    tolerance = float('inf') if tolerance == -1 else tolerance
+    tolerance = float("inf") if tolerance == -1 else tolerance
     _tolerance = 0
-    if check_network_connection():
-        os.environ['SE_DRIVER_MIRROR_URL'] = 'https://mirrors.huaweicloud.com/geckodriver/'
-    else:
-        os.environ['SE_OFFLINE'] = 'true'
+
     while _tolerance < tolerance:
+        driver = None  # 初始化 driver
         try:
-            options = FirefoxOptions()
+            options = ChromeOptions()
             options.add_argument("--headless")
-            options.add_argument("--disable-gpu")
-            driver = webdriver.Firefox(options=options)
-            print('start')
+            options.add_argument("--window-size=1920,1080")
+
+            # 使用 webdriver_manager 自动处理驱动
+            service = Service("/usr/bin/chromedriver")
+            driver = webdriver.Chrome(service=service, options=options)
+
+            print("Starting session...")
+
             while True:
                 if check_network_connection():
                     time.sleep(1)
@@ -41,37 +44,36 @@ def run(url, username, password, need_keep, tolerance):
                         break
                     continue
                 driver.get(url)
-                time.sleep(10)  # 需要完整加载
+                time.sleep(10)
+
                 driver.find_element(By.ID, "username").send_keys(username)
                 driver.find_element(By.ID, "password").send_keys(password)
                 driver.find_element(By.ID, "login-account").click()
+
                 _tolerance = 0
-                time.sleep(1)
-                print('ok')
+                print("Login successful")
 
                 if not need_keep:
                     _tolerance = tolerance
                     break
-        except ElementNotInteractableException as e:
-            _tolerance = 0
-            time.sleep(2)
+                time.sleep(60)  # 保持登录时，避免死循环请求
+
         except WebDriverException as e:
             _tolerance += 1
-            print("An error occurred:", e)
-            time.sleep(2)
+            print(f"WebDriver error: {e}")
+            time.sleep(5)
         finally:
-            driver.quit()
+            if driver:
+                driver.quit()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('--url', type=str, default='http://124.17.100.50/')
-    parser.add_argument('--username', type=str)
-    parser.add_argument('--password', type=str)
-    parser.add_argument('--need_keep', type=bool, default=False)
-    parser.add_argument('--tolerance', type=int, default=-1)
-
+    parser.add_argument("--url", type=str, default="http://124.17.100.50/")
+    parser.add_argument("--username", type=str, required=True)
+    parser.add_argument("--password", type=str, required=True)
+    parser.add_argument("--need_keep", type=bool, default=False)
+    parser.add_argument("--tolerance", type=int, default=-1)
     args = parser.parse_args()
 
     run(args.url, args.username, args.password, args.need_keep, args.tolerance)
